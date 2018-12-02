@@ -1,0 +1,15 @@
+-*- mode: compilation; default-directory: "~/Dropbox/Academics/AME557/Projects/ame557-proj3/NumericalIntegration/" -*-
+Compilation started at Sat Dec  1 15:36:00
+
+make -k 
+python NumericalIntegration.py
+Mean Motion: 0.00116228454858
+Orbital Period: 5405.89248549
+Initial Radius: 6652.093445817603
+Initial Velocity: 7.743944454389337
+Position: [ 1895874.38838166  4497007.59724938 -4507886.60518927]
+Velocity: [-7120.17746759  3051.88529362    73.34216649]
+Orbital Elements: [6.64582965e+06 2.06999581e-03 4.27320639e+01 1.56211622e+02
+ 8.19853023e+00 8.07678293e+01]
+
+Compilation finished at Sat Dec  1 15:39:14

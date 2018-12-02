@@ -1,2 +1,2 @@
-# ame557-proj3
-The Final Push! Using the Lambert solver for orbital maintenance. 
+# ame557-proj2
+Project 2 - Orbital Propagation and Satellite Demise
