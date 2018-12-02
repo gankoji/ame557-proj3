@@ -88,12 +88,12 @@ function [vo,v,errorb] = lambertb ( ro,r, dm,nrev, dtsec )
         k2 = 0.0;
         u = 0.0;
 
-        magr = mag(r);
-        magro = mag(ro);
+        magr = norm(r);
+        magro = norm(ro);
 
         cosdeltanu= dot(ro,r)/(magro*magr);
         rcrossr = cross( ro,r );
-        magrcrossr = mag(rcrossr);
+        magrcrossr = norm(rcrossr);
         if dm=='s'
             sindeltanu= magrcrossr/(magro*magr);
         else
