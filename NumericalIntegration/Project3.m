@@ -24,18 +24,18 @@ T = 2*pi/n;
 % First task is to generate the disk of positions and velocities
 % associated with the original and final orbits
 
-nStepsR = 25;
-nStepsT = 300;
+nStepsR = 100;
+nStepsT = 600;
 
 f1Start = 3.1;
 f1End = 3.2;
 f1Step = (f1End - f1Start)/nStepsR;
 
-f2Start = 0.5;
-f2End = 0.65;
+f2Start = 0.45;
+f2End = 0.55;
 f2Step = (f2End - f2Start)/nStepsR;
 
-tofs = linspace(7700, 7800, nStepsT);
+tofs = linspace(7750.0, 7760, nStepsT);
 r0 = zeros(nStepsR, 3);
 v0 = zeros(nStepsR, 3);
 rf = zeros(nStepsR, 3);
@@ -79,8 +79,8 @@ for i=1:nStepsR
                                                   mu);
             
             if isnan(V2)
-                errV = 10000.0;
-                dv2(i, j, k, :) = 10000.0;
+                errV = 10.0;
+                dv2(i, j, k, :) = 10.0;
             else
                 errVec = V2 - ve;
                 errV = norm(errVec);
@@ -88,8 +88,8 @@ for i=1:nStepsR
             end
             
             if isnan(V1)
-                errV = 10000.0;
-                dv1(i, j, k, :) = 10000.0;
+                errV = 10.0;
+                dv1(i, j, k, :) = 10.0;
             else
                 errVec = V1 - v;
                 errV = errV + norm(errVec);
@@ -105,35 +105,67 @@ for i=1:nStepsR
 end
 
 %min(costs, [], 'all')
-[M, index] = min3d(costs);
+fileID = fopen('results_maneuvers.txt','w');
+[minCost, index] = min3d(costs);
 burn1Pos = r0(index(1), :);
 burn2Pos = rf(index(2), :);
 f1burn = index(1)*f1Step + f1Start;
 f2burn = index(2)*f2Step + f2Start;
 tof = tofs(index(3));
-% m = ms(index(1), index(2), index(3))
-% [V1, V2, ~, ~] = lamberti(burn1Pos, burn2Pos, tof, m, mu);
-% burn1 = V1 - v0(index(1), :)
-% burn2 = V2 - vf(index(2), :)
-fprintf('Minimum Burn Cost: %6.4f\n', M);
-fprintf('Position for Burn One: %6.4f %6.4f %6.4f\n', burn1Pos(1), ...
-        burn1Pos(2), burn1Pos(3));
-fprintf('Delta Velocity, Burn One: %6.4f\n', dv1(index(1), index(2), ...
-                                                 index(3)));
-fprintf('Position for Burn Two: %6.4f %6.4f %6.4f\n', burn2Pos(1), ...
-        burn2Pos(2), burn2Pos(3));
-fprintf('Delta Velocity, Burn Two: %6.4f\n', dv2(index(1), index(2), ...
-                                                 index(3)));
-fprintf('Time of Flight: %6.4f\n', tof);
-fprintf('True Anomaly of First Burn: %6.4f\n', f1burn);
-fprintf('True Anomaly of Second Burn: %6.4f\n', f2burn);
+
+minCost = dv1(index(1), index(2), index(3)) + dv2(index(1), index(2), ...
+                                                  index(3));
 
 ddv1 = squeeze(v1s(index(1), index(2), index(3), :)) - v0(index(1), :)';
 ddv2 = squeeze(v2s(index(1), index(2), index(3), :)) - vf(index(2), :)';
 
-fprintf('Burn 1: %6.5f %6.5f %6.5f\n', ddv1(1), ddv1(2), ddv1(3));
-fprintf('Burn 2: %6.5f %6.5f %6.5f\n', ddv2(1), ddv2(2), ddv2(3));
-norm(ddv1) + norm(ddv2)
+fprintf(fileID,'Minimum Burn Cost: %6.4f km/s\n', minCost);
+fprintf(fileID,'Position for Burn One: %6.4f %6.4f %6.4f km, ECI\n', burn1Pos(1), ...
+        burn1Pos(2), burn1Pos(3));
+fprintf(fileID,'Delta Velocity, Burn One: %6.4f km/s\n', dv1(index(1), index(2), ...
+                                                 index(3)));
+fprintf(fileID,'Position for Burn Two: %6.4f %6.4f %6.4f km, ECI\n', burn2Pos(1), ...
+        burn2Pos(2), burn2Pos(3));
+fprintf(fileID,'Delta Velocity, Burn Two: %6.4f km/s\n', dv2(index(1), index(2), ...
+                                                 index(3)));
+fprintf(fileID,'Time of Flight: %6.4f seconds\n', tof);
+fprintf(fileID,'True Anomaly of First Burn: %6.4f rad\n', f1burn);
+fprintf(fileID,'True Anomaly of Second Burn: %6.4f rad\n', f2burn);
+
+fprintf(fileID,'Burn 1: %6.5f %6.5f %6.5f km/s, ECI\n', ddv1(1), ddv1(2), ddv1(3));
+fprintf(fileID,'Burn 2: %6.5f %6.5f %6.5f km/s, ECI\n', ddv2(1), ddv2(2), ddv2(3));
 
 
 toc
+
+% Plot our results to show that we have, qualitatively, reached an
+% optimum.
+
+total_delta = dv1+dv2;
+
+figure;
+plot(tofs(:), squeeze(total_delta(index(1), index(2), :)));
+hold on;
+xlabel('Time of Flight');
+ylabel('Total Maneuver Impulse (m/s)');
+title('Cost Function of Maneuver');
+saveas(gcf, 'ToF_Cost','fig');
+close(gcf);
+
+figure;
+plot(linspace(f1Start, f1End, nStepsR), squeeze(total_delta(:, index(2), index(3))));
+hold on;
+xlabel('True Anomaly of Startpoint (rad)');
+ylabel('Total Maneuver Impulse (m/s)');
+title('Cost Function of Maneuver');
+saveas(gcf, 'Start_Cost','fig');
+close(gcf);
+
+figure;
+plot(linspace(f2Start, f2End, nStepsR), squeeze(total_delta(index(1), :, index(3))));
+hold on;
+xlabel('True Anomaly of Endpoint (rad)');
+ylabel('Total Maneuver Impulse (m/s)');
+title('Cost Function of Maneuver');
+saveas(gcf, 'End_Cost','fig');
+close(gcf);
