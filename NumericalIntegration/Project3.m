@@ -24,18 +24,18 @@ T = 2*pi/n;
 % First task is to generate the disk of positions and velocities
 % associated with the original and final orbits
 
-nStepsR = 40;
-nStepsT = 500;
+nStepsR = 25;
+nStepsT = 300;
 
-f1Start = 3;
-f1End = 3.5;
+f1Start = 3.1;
+f1End = 3.2;
 f1Step = (f1End - f1Start)/nStepsR;
 
-f2Start = 0.3;
-f2End = 0.8;
+f2Start = 0.5;
+f2End = 0.65;
 f2Step = (f2End - f2Start)/nStepsR;
 
-tofs = linspace(7000, 9000, nStepsT);
+tofs = linspace(7700, 7800, nStepsT);
 r0 = zeros(nStepsR, 3);
 v0 = zeros(nStepsR, 3);
 rf = zeros(nStepsR, 3);
@@ -58,6 +58,9 @@ end
 costs = zeros(nStepsR, nStepsR, nStepsT);
 dv1 = zeros(nStepsR, nStepsR, nStepsT);
 dv2 = zeros(nStepsR, nStepsR, nStepsT);
+ms = zeros(nStepsR, nStepsR, nStepsT);
+v1s = zeros(nStepsR, nStepsR, nStepsT, 3);
+v2s = zeros(nStepsR, nStepsR, nStepsT, 3);
 
 for i=1:nStepsR
     for j=1:nStepsR
@@ -71,39 +74,48 @@ for i=1:nStepsR
             
             tof = tofs(k)/secondsPerDay;
             m = floor(tof/T) + 1;
+            
             [V1, V2, extremal_distances, exitflag] = lamberti(r, re, tof, m, ...
                                                   mu);
             
             if isnan(V2)
                 errV = 10000.0;
-                dv2(i, j, k) = 10000.0;
+                dv2(i, j, k, :) = 10000.0;
             else
-                errV = norm(V2 - ve');
-                dv2(i, j, k) = norm(V2 - ve');
+                errVec = V2 - ve;
+                errV = norm(errVec);
+                dv2(i, j, k, :) = norm(errVec);
             end
             
             if isnan(V1)
                 errV = 10000.0;
-                dv1(i, j, k) = 10000.0;
+                dv1(i, j, k, :) = 10000.0;
             else
-                errV = errV + norm(V1 - v');
-                dv1(i, j, k) = norm(V1 - v');
+                errVec = V1 - v;
+                errV = errV + norm(errVec);
+                dv1(i, j, k, :) = norm(errVec);
             end
             
             costs(i, j, k) = errV;
+            ms(i, j, k) = m;
+            v1s(i, j, k, :) = V1;
+            v2s(i, j, k, :) = V2;
         end
     end
 end
 
 %min(costs, [], 'all')
-[m, index] = min3d(costs);
+[M, index] = min3d(costs);
 burn1Pos = r0(index(1), :);
 burn2Pos = rf(index(2), :);
 f1burn = index(1)*f1Step + f1Start;
 f2burn = index(2)*f2Step + f2Start;
 tof = tofs(index(3));
-
-fprintf('Minimum Burn Cost: %6.4f\n', m);
+% m = ms(index(1), index(2), index(3))
+% [V1, V2, ~, ~] = lamberti(burn1Pos, burn2Pos, tof, m, mu);
+% burn1 = V1 - v0(index(1), :)
+% burn2 = V2 - vf(index(2), :)
+fprintf('Minimum Burn Cost: %6.4f\n', M);
 fprintf('Position for Burn One: %6.4f %6.4f %6.4f\n', burn1Pos(1), ...
         burn1Pos(2), burn1Pos(3));
 fprintf('Delta Velocity, Burn One: %6.4f\n', dv1(index(1), index(2), ...
@@ -115,6 +127,13 @@ fprintf('Delta Velocity, Burn Two: %6.4f\n', dv2(index(1), index(2), ...
 fprintf('Time of Flight: %6.4f\n', tof);
 fprintf('True Anomaly of First Burn: %6.4f\n', f1burn);
 fprintf('True Anomaly of Second Burn: %6.4f\n', f2burn);
+
+ddv1 = squeeze(v1s(index(1), index(2), index(3), :)) - v0(index(1), :)';
+ddv2 = squeeze(v2s(index(1), index(2), index(3), :)) - vf(index(2), :)';
+
+fprintf('Burn 1: %6.5f %6.5f %6.5f\n', ddv1(1), ddv1(2), ddv1(3));
+fprintf('Burn 2: %6.5f %6.5f %6.5f\n', ddv2(1), ddv2(2), ddv2(3));
+norm(ddv1) + norm(ddv2)
 
 
 toc
