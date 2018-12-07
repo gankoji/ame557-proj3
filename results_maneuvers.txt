@@ -1,0 +1,10 @@
+Minimum Burn Cost: 1.5639 km/s
+Position for Burn One: 164.2874 4881.3597 4507.9203 km, ECI
+Delta Velocity, Burn One: 1.3877 km/s
+Position for Burn Two: -3659.0625 -3701.1149 -4166.2349 km, ECI
+Delta Velocity, Burn Two: 0.1762 km/s
+Time of Flight: 7622.0408 seconds
+True Anomaly of First Burn: 1.5200 rad
+True Anomaly of Second Burn: 2.1400 rad
+Burn 1: 0.07323 0.88478 -1.06655 km/s, ECI
+Burn 2: 0.00494 0.07557 -0.15914 km/s, ECI
