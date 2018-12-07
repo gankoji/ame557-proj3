@@ -1,0 +1,29 @@
+The method used to determine the optimal burn pattern for the
+Tiangong-1 was essentially a brute force search on a 3 dimensional
+space. The decayed and desired orbits were propagated for one orbit
+each, and the true anomaly of the starting and endpoints were varied
+initially over the range 0-2*pi. The time of flight between points was
+varied over a wide range, roughly 0-3 orbital periods (about 1.5-4.5
+hours).
+
+At each point in the search space, a corresponding set of initial and
+final vector positions were generated from the orbital elements of
+each orbit. These two vectors, along with the time of flight (and
+approximate number of revolutions, based on the decayed orbit's
+period), were fed to a Lambert solver (via Izzo and Lancaster,
+Blanchard & Gooding) to find the corresponding velocities to the arc
+between them. From these velocities was subtracted the orbital
+velocity at the corresponding point in the orbit (for decayed and
+desired, each) as:
+
+dV1 = V1_Lambert - V_decayed;
+dV2 = V2_Lambert - V_desired;
+
+These impulsive delta velocities were stored, and the combination of
+their magnitudes was used as the "cost function" of the search. After
+searching over the entire design space, the search mesh was refined
+iteratively (manually) to enclose a smaller and smaller region of the
+design space, until a suitable convergence was reached. (It's
+important to note that the convergence was "my own personal getting
+tired of getting more zoomed in" and not any real convergence on
+relative differences).
